@@ -1,1 +1,63 @@
+{{- if .Values.config.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "flowise.fullname" . }}-config
+  labels:
+    {{- include "flowise.labels" . | nindent 4 }}
+data:
+  # Database Configuration
+  DATABASE_TYPE: {{ .Values.database.type | quote }}
+  {{- if ne .Values.database.type "sqlite" }}
+  DATABASE_HOST: {{ .Values.database.host | quote }}
+  DATABASE_PORT: {{ .Values.database.port | quote }}
+  DATABASE_NAME: {{ .Values.database.name | quote }}
+  DATABASE_USER: {{ .Values.database.user | quote }}
+  {{- end }}
+  
+  # Application Configuration
+  PORT: "3000"
+  FLOWISE_USERNAME: {{ .Values.auth.username | default "admin" | quote }}
+  
+  # Flow Configuration
+  {{- if .Values.config.flows.secretKey }}
+  SECRETKEY_PATH: "/etc/flowise/secretkey"
+  {{- end }}
+  
+  # API Configuration
+  {{- if .Values.config.api.cors.enabled }}
+  CORS_ORIGINS: {{ .Values.config.api.cors.origins | quote }}
+  {{- end }}
+  
+  # Chatflow Configuration
+  {{- if .Values.config.chatflow.uploads.enabled }}
+  BLOB_STORAGE_PATH: {{ .Values.config.chatflow.uploads.path | quote }}
+  {{- end }}
+  
+  # Tool Configuration
+  {{- if .Values.config.tools.langSmith.enabled }}
+  LANGCHAIN_TRACING_V2: "true"
+  LANGCHAIN_ENDPOINT: {{ .Values.config.tools.langSmith.endpoint | quote }}
+  LANGCHAIN_PROJECT: {{ .Values.config.tools.langSmith.project | quote }}
+  {{- end }}
+  
+  # Debug Configuration
+  {{- if .Values.config.debug }}
+  DEBUG: {{ .Values.config.debug | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | default "info" | quote }}
+  {{- end }}
+  
+  # Custom Environment Variables
+  {{- range $key, $value := .Values.env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  
+  # Configuration Files
+  {{- if .Values.config.files }}
+  {{- range $filename, $content := .Values.config.files }}
+  {{ $filename }}: |
+    {{- $content | nindent 4 }}
+  {{- end }}
+  {{- end }}
+{{- end }}
 
